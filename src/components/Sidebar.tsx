@@ -208,7 +208,7 @@ export function Sidebar() {
               letterSpacing: "-0.5px",
             }}
           >
-            Mission Control
+            The BatCave
           </h1>
         </div>
 
@@ -288,7 +288,7 @@ export function Sidebar() {
             className="px-4 py-2 text-xs"
             style={{ color: "var(--text-muted)" }}
           >
-            OpenClaw Agent
+Alfred command center
           </div>
 
           <button
@@ -305,7 +305,7 @@ export function Sidebar() {
             }}
           >
             <LogOut className="w-4 h-4" />
-            <span className="text-sm">Cerrar sesión</span>
+            <span className="text-sm">Sign out</span>
           </button>
         </div>
       </aside>

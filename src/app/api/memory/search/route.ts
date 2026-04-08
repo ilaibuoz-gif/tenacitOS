@@ -1,106 +1,72 @@
 /**
- * Memory full-text search API
+ * Memory search API
  * GET /api/memory/search?q=<query>
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
+import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
-const OPENCLAW_DIR = process.env.OPENCLAW_DIR || '/root/.openclaw';
-const WORKSPACE = path.join(OPENCLAW_DIR, 'workspace');
+const OPENCLAW_DIR = process.env.OPENCLAW_DIR || '/Users/alialzoubi/.openclaw';
+const WORKSPACE_DIR = path.join(OPENCLAW_DIR, 'workspace');
+const MEMORY_FILE = path.join(WORKSPACE_DIR, 'MEMORY.md');
+const MEMORY_DIR = path.join(WORKSPACE_DIR, 'memory');
 
-interface SearchResult {
-  file: string;
-  title: string;
-  snippet: string;
-  matches: number;
-  path: string;
-}
+function simpleSearch(query: string) {
+  const needle = query.toLowerCase();
+  const results: Array<{ path: string; snippet: string; score: number }> = [];
 
-async function searchFile(filePath: string, query: string, displayPath: string): Promise<SearchResult | null> {
-  try {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const lower = content.toLowerCase();
-    const queryLower = query.toLowerCase();
-    const words = queryLower.split(/\s+/).filter(Boolean);
-
-    // Count matches for each word
-    let totalMatches = 0;
-    for (const word of words) {
-      let pos = 0;
-      while (true) {
-        const idx = lower.indexOf(word, pos);
-        if (idx === -1) break;
-        totalMatches++;
-        pos = idx + 1;
-      }
+  const files = [MEMORY_FILE];
+  if (fs.existsSync(MEMORY_DIR)) {
+    for (const name of fs.readdirSync(MEMORY_DIR)) {
+      if (name.endsWith('.md')) files.push(path.join(MEMORY_DIR, name));
     }
-
-    if (totalMatches === 0) return null;
-
-    // Extract snippet around first match
-    const firstMatchIdx = lower.indexOf(words[0]);
-    const snippetStart = Math.max(0, firstMatchIdx - 60);
-    const snippetEnd = Math.min(content.length, firstMatchIdx + 200);
-    let snippet = content.slice(snippetStart, snippetEnd).replace(/\n+/g, ' ').trim();
-    if (snippetStart > 0) snippet = '...' + snippet;
-    if (snippetEnd < content.length) snippet = snippet + '...';
-
-    // Get title (first heading or filename)
-    const titleMatch = content.match(/^#\s+(.+)/m);
-    const title = titleMatch ? titleMatch[1] : path.basename(filePath, '.md');
-
-    return { file: path.basename(filePath), title, snippet, matches: totalMatches, path: displayPath };
-  } catch {
-    return null;
   }
+
+  for (const file of files) {
+    if (!fs.existsSync(file)) continue;
+    const text = fs.readFileSync(file, 'utf-8');
+    const idx = text.toLowerCase().indexOf(needle);
+    if (idx >= 0) {
+      const start = Math.max(0, idx - 120);
+      const end = Math.min(text.length, idx + 240);
+      results.push({
+        path: file.replace(WORKSPACE_DIR + '/', ''),
+        snippet: text.slice(start, end).replace(/\n+/g, ' ').trim(),
+        score: 1,
+      });
+    }
+  }
+
+  return results.slice(0, 20);
 }
 
-async function getFiles(): Promise<Array<{ path: string; display: string }>> {
-  const files: Array<{ path: string; display: string }> = [];
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const query = (searchParams.get('q') || '').trim();
 
-  // Root workspace files
-  const rootFiles = ['MEMORY.md', 'SOUL.md', 'USER.md', 'AGENTS.md', 'TOOLS.md', 'IDENTITY.md', 'HEARTBEAT.md'];
-  for (const f of rootFiles) {
-    const full = path.join(WORKSPACE, f);
+  if (!query) {
+    return NextResponse.json({ results: [], total: 0, source: 'empty-query' });
+  }
+
+  try {
     try {
-      await fs.access(full);
-      files.push({ path: full, display: f });
-    } catch {}
-  }
-
-  // Memory directory
-  try {
-    const memDir = path.join(WORKSPACE, 'memory');
-    const memFiles = await fs.readdir(memDir);
-    for (const f of memFiles.sort().reverse().slice(0, 30)) { // last 30 days
-      if (f.endsWith('.md')) {
-        files.push({ path: path.join(memDir, f), display: `memory/${f}` });
-      }
+      const raw = execSync(`openclaw memory search ${JSON.stringify(query)} --json`, {
+        encoding: 'utf-8',
+        timeout: 10000,
+        cwd: process.cwd(),
+      });
+      const parsed = JSON.parse(raw);
+      const results = parsed.results || [];
+      return NextResponse.json({ results, total: results.length, source: 'openclaw-memory' });
+    } catch {
+      const results = simpleSearch(query);
+      return NextResponse.json({ results, total: results.length, source: 'filesystem-fallback' });
     }
-  } catch {}
-
-  return files;
-}
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q')?.trim() || '';
-
-  if (query.length < 2) {
-    return NextResponse.json({ results: [], query });
-  }
-
-  try {
-    const files = await getFiles();
-    const results = await Promise.all(files.map((f) => searchFile(f.path, query, f.display)));
-    const sorted = results
-      .filter(Boolean)
-      .sort((a, b) => (b?.matches || 0) - (a?.matches || 0)) as SearchResult[];
-
-    return NextResponse.json({ results: sorted.slice(0, 20), query, total: sorted.length });
   } catch (error) {
-    console.error('[memory/search] Error:', error);
-    return NextResponse.json({ error: 'Search failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to search memory', details: String(error) },
+      { status: 500 }
+    );
   }
 }

@@ -19,8 +19,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mission Control - OpenClaw",
-  description: "Your OpenClaw agent dashboard",
+  title: "The BatCave - OpenClaw",
+  description: "The BatCave, dark operations for Alfred and the Bat Family",
   manifest: "/manifest.json",
   themeColor: "#1a1a2e",
   appleWebApp: {

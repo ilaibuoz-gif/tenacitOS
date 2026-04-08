@@ -47,7 +47,7 @@ export function TopBar() {
       >
         {/* Left: Logo & Title */}
         <div className="flex items-center gap-3">
-          <span style={{ fontSize: "20px" }}>🦞</span>
+          <span style={{ fontSize: "20px" }}>🦇</span>
           <h1
             style={{
               fontFamily: "var(--font-heading)",
@@ -57,7 +57,7 @@ export function TopBar() {
               letterSpacing: "-0.5px",
             }}
           >
-            TenacitOS
+            The BatCave
           </h1>
           {/* Version Badge */}
           <div
@@ -81,7 +81,7 @@ export function TopBar() {
           </div>
         </div>
 
-        {/* Right: Search + Notifications + User */}
+        {/* Right: Search + Notifytions + User */}
         <div className="flex items-center gap-3">
           {/* Search Box */}
           <button
@@ -114,7 +114,7 @@ export function TopBar() {
             </span>
           </button>
 
-          {/* Notifications Dropdown */}
+          {/* Notifytions Dropdown */}
           <NotificationDropdown />
 
           {/* User Area */}
@@ -139,7 +139,7 @@ export function TopBar() {
                   color: "var(--text-primary)",
                 }}
               >
-                C
+A
               </span>
             </div>
             {/* Name */}
@@ -151,7 +151,7 @@ export function TopBar() {
                 color: "var(--text-secondary)",
               }}
             >
-              Carlos
+Alfred
             </span>
           </div>
         </div>

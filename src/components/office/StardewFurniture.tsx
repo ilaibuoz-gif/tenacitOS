@@ -386,7 +386,7 @@ export function StardewSmartphone({ x, y }: FurnitureProps) {
       <circle cx="7" cy="9" r="1.2" fill="#4A9AFF" />
       <rect x="2" y="12" width="6" height="2" rx="0.5" fill="#FFFFFF" opacity="0.7" />
       
-      {/* Notification badge */}
+      {/* Notifytion badge */}
       <circle cx="8" cy="4" r="1" fill="#FF4A4A">
         <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
       </circle>

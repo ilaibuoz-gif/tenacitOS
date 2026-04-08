@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execSync } from "child_process";
 
-async function createNotification(title: string, message: string, type: "info" | "success" | "warning" | "error" = "info") {
+async function createNotifytion(title: string, message: string, type: "info" | "success" | "warning" | "error" = "info") {
   try {
     await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/notifications`, {
       method: "POST",
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create success notification
-    await createNotification(
+    await createNotifytion(
       "Cron Job Triggered",
       `Job "${id}" has been manually executed.`,
       "success"
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     
     // Create error notification
     const body = await request.json();
-    await createNotification(
+    await createNotifytion(
       "Cron Job Failed",
       `Failed to execute job "${body.id}": ${message}`,
       "error"

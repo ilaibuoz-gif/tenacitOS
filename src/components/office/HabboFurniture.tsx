@@ -388,7 +388,7 @@ export function HabboSmartphone({ isoX, isoY }: FurnitureProps) {
           <animate attributeName="fill" values="#ec4899;#f472b6;#ec4899" dur="2s" repeatCount="indefinite" />
         </rect>
         
-        {/* Notification icons */}
+        {/* Notifytion icons */}
         <circle cx="9" cy="10" r="1" fill="#fff" />
         <circle cx="12" cy="10" r="1" fill="#fff" />
         <circle cx="15" cy="10" r="1" fill="#fff" />

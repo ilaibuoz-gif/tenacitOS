@@ -30,7 +30,7 @@ export default function Office3D() {
     main: { id: 'main', status: 'working', currentTask: 'Procesando emails', model: 'opus', tokensPerHour: 15000, tasksInQueue: 3, uptime: 12 },
     academic: { id: 'academic', status: 'idle', model: 'sonnet', tokensPerHour: 0, tasksInQueue: 0, uptime: 8 },
     studio: { id: 'studio', status: 'thinking', currentTask: 'Generando guión YouTube', model: 'opus', tokensPerHour: 8000, tasksInQueue: 1, uptime: 5 },
-    linkedin: { id: 'linkedin', status: 'working', currentTask: 'Redactando post', model: 'sonnet', tokensPerHour: 5000, tasksInQueue: 2, uptime: 10 },
+    linkedin: { id: 'linkedin', status: 'working', currentTask: 'Draftndo post', model: 'sonnet', tokensPerHour: 5000, tasksInQueue: 2, uptime: 10 },
     social: { id: 'social', status: 'idle', model: 'sonnet', tokensPerHour: 0, tasksInQueue: 0, uptime: 7 },
     infra: { id: 'infra', status: 'error', currentTask: 'Failed deployment', model: 'haiku', tokensPerHour: 1000, tasksInQueue: 0, uptime: 15 },
   });
@@ -226,7 +226,7 @@ export default function Office3D() {
                     <ul className="space-y-2">
                       <li className="flex items-center gap-2">
                         <span className="text-green-400">✓</span>
-                        <span>Phase 0: TenacitOS Shell</span>
+                        <span>Phase 0: The BatCave Shell</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="text-yellow-400">●</span>
@@ -287,7 +287,7 @@ export default function Office3D() {
             <>
               <p>🖱️ Mouse: Rotar vista</p>
               <p>🔄 Scroll: Zoom</p>
-              <p>👆 Click: Seleccionar</p>
+              <p>👆 Click: Selectr</p>
             </>
           ) : (
             <>
@@ -308,7 +308,7 @@ export default function Office3D() {
 
       {/* Legend */}
       <div className="absolute bottom-4 right-4 bg-black/70 text-white p-4 rounded-lg backdrop-blur-sm">
-        <h3 className="text-sm font-bold mb-2">Estados</h3>
+        <h3 className="text-sm font-bold mb-2">Statuss</h3>
         <div className="text-xs space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>

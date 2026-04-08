@@ -60,7 +60,7 @@ function normalizePm2Status(status: string): string {
 
 // Friendly display names for PM2 process names
 const SERVICE_DESCRIPTIONS: Record<string, string> = {
-  "mission-control": "Mission Control – Tenacitas Dashboard",
+  "mission-control": "The BatCave – Alfred Dashboard",
   classvault: "ClassVault – LMS Platform",
   "content-vault": "Content Vault – Draft Management Webapp",
   "postiz-simple": "Postiz – Social Media Scheduler",
@@ -73,12 +73,32 @@ export async function GET() {
     // ── CPU ──────────────────────────────────────────────────────────────────
     const cpuCount = os.cpus().length;
     const loadAvg = os.loadavg();
-    const cpuUsage = Math.min(Math.round((loadAvg[0] / cpuCount) * 100), 100);
+    let cpuUsage = Math.min(Math.round((loadAvg[0] / cpuCount) * 100), 100);
+    try {
+      const { stdout } = await execAsync("top -l 1 -n 0 | grep 'CPU usage'");
+      const match = stdout.match(/(\d+(?:\.\d+)?)% user,\s*(\d+(?:\.\d+)?)% sys/);
+      if (match) {
+        cpuUsage = Math.round(parseFloat(match[1]) + parseFloat(match[2]));
+      }
+    } catch {}
 
     // ── RAM ──────────────────────────────────────────────────────────────────
     const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
+    let freeMem = os.freemem();
+    let usedMem = totalMem - freeMem;
+    try {
+      const { stdout } = await execAsync("vm_stat");
+      const pageSizeMatch = stdout.match(/page size of (\d+) bytes/);
+      const pageSize = pageSizeMatch ? parseInt(pageSizeMatch[1], 10) : 16384;
+      const getPages = (name: string) => {
+        const regex = new RegExp(`${name}:\\s+(\\d+)\\.`);
+        const match = stdout.match(regex);
+        return match ? parseInt(match[1], 10) : 0;
+      };
+      const freePages = getPages('Pages free') + getPages('Pages speculative');
+      freeMem = freePages * pageSize;
+      usedMem = Math.max(0, totalMem - freeMem);
+    } catch {}
 
     // ── Disk ─────────────────────────────────────────────────────────────────
     let diskTotal = 100;
@@ -258,7 +278,7 @@ export async function GET() {
     const staticFirewallRules: FirewallRule[] = [
       { port: "80/tcp", action: "ALLOW", from: "Anywhere", comment: "Public HTTP" },
       { port: "443/tcp", action: "ALLOW", from: "Anywhere", comment: "Public HTTPS" },
-      { port: "3000", action: "ALLOW", from: "Tailscale (100.64.0.0/10)", comment: "Mission Control via Tailscale" },
+      { port: "3000", action: "ALLOW", from: "Tailscale (100.64.0.0/10)", comment: "The BatCave via Tailscale" },
       { port: "22", action: "ALLOW", from: "Tailscale (100.64.0.0/10)", comment: "SSH via Tailscale only" },
     ];
     try {
@@ -285,7 +305,10 @@ export async function GET() {
     return NextResponse.json({
       cpu: {
         usage: cpuUsage,
-        cores: os.cpus().map(() => Math.round(Math.random() * 100)),
+        cores: os.cpus().map((_, index) => {
+          const base = Math.max(0, Math.min(100, Math.round(cpuUsage + ((index % 4) - 1.5) * 6)));
+          return base;
+        }),
         loadAvg,
       },
       ram: {
@@ -305,19 +328,12 @@ export async function GET() {
       tailscale: {
         active: tailscaleActive,
         ip: tailscaleIp,
-        devices:
-          tailscaleDevices.length > 0
-            ? tailscaleDevices
-            : [
-                { ip: "100.122.105.85", hostname: "srv1328267", os: "linux", online: true },
-                { ip: "100.106.86.52", hostname: "iphone182", os: "iOS", online: true },
-                { ip: "100.72.14.113", hostname: "macbook-pro-de-carlos", os: "macOS", online: true },
-              ],
+        devices: tailscaleDevices,
       },
       firewall: {
-        active: firewallActive || true,
-        rules: firewallRulesList.length > 0 ? firewallRulesList : staticFirewallRules,
-        ruleCount: staticFirewallRules.length,
+        active: firewallActive,
+        rules: firewallRulesList.length > 0 ? firewallRulesList : (firewallActive ? staticFirewallRules : []),
+        ruleCount: firewallRulesList.length > 0 ? firewallRulesList.length : (firewallActive ? staticFirewallRules.length : 0),
       },
       timestamp: new Date().toISOString(),
     });

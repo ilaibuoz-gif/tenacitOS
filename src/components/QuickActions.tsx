@@ -28,19 +28,19 @@ interface ActionButton {
 export function QuickActions({ onActionComplete }: QuickActionsProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [notification, setNotification] = useState<{
+  const [notification, setNotifytion] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
 
-  const showNotification = (type: "success" | "error", message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3000);
+  const showNotifytion = (type: "success" | "error", message: string) => {
+    setNotifytion({ type, message });
+    setTimeout(() => setNotifytion(null), 3000);
   };
 
   const handleRestartGateway = async () => {
     // Placeholder - would call openclaw gateway restart
-    showNotification("success", "Gateway restart command sent (placeholder)");
+    showNotifytion("success", "Gateway restart command sent (placeholder)");
   };
 
   const handleClearActivityLog = async () => {
@@ -54,10 +54,10 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
 
       if (!res.ok) throw new Error("Failed to clear log");
 
-      showNotification("success", "Activity log cleared successfully");
+      showNotifytion("success", "Activity log cleared successfully");
       onActionComplete?.();
     } catch {
-      showNotification("error", "Failed to clear activity log");
+      showNotifytion("error", "Failed to clear activity log");
     } finally {
       setLoadingAction(null);
     }
@@ -65,7 +65,7 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
 
   const handleViewLogs = async () => {
     // Placeholder - would open gateway logs
-    showNotification("success", "Opening gateway logs... (placeholder)");
+    showNotifytion("success", "Opening gateway logs... (placeholder)");
   };
 
   const actions: ActionButton[] = [
@@ -118,7 +118,7 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
           Quick Actions
         </h2>
 
-        {/* Notification */}
+        {/* Notifytion */}
         {notification && (
           <div
             className={`flex items-center gap-2 p-3 rounded-lg mb-4 ${
@@ -169,7 +169,7 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
         isOpen={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
         onSuccess={() => {
-          showNotification("success", "Password changed successfully");
+          showNotifytion("success", "Password changed successfully");
           setShowPasswordModal(false);
         }}
       />

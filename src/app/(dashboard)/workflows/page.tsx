@@ -1,7 +1,5 @@
 "use client";
 
-import { BRANDING } from "@/config/branding";
-
 interface Workflow {
   id: string;
   emoji: string;
@@ -15,164 +13,83 @@ interface Workflow {
 
 const WORKFLOWS: Workflow[] = [
   {
-    id: "social-radar",
-    emoji: "🔭",
-    name: "Social Radar",
-    description: "Monitoriza menciones, oportunidades de colaboración y conversaciones relevantes en redes sociales y foros.",
-    schedule: "9:30h y 17:30h (cada día)",
+    id: "daily-briefing",
+    emoji: "🗞️",
+    name: "Daily Briefing",
+    description: "Morning digest of what matters across Alfred's world: inbox, sessions, tasks, and anything that needs Ali's attention.",
+    schedule: "08:00 every day",
     trigger: "cron",
     status: "active",
     steps: [
-      `Busca menciones de ${BRANDING.twitterHandle} en Twitter/X, LinkedIn e Instagram`,
-      "Revisa hilos de Reddit en r/webdev, r/javascript, r/learnprogramming",
-      `Detecta oportunidades de colaboración y collabs entrantes (${BRANDING.ownerCollabEmail})`,
-      "Monitoriza aprendiendo.dev en conversaciones y menciones",
-      "Envía resumen por Telegram si hay algo relevante",
+      "Check recent OpenClaw sessions and unresolved tasks",
+      "Scan key updates from messages, alerts, and work in progress",
+      "Summarize the most important changes since yesterday",
+      "Highlight anything blocked, urgent, or worth reviewing",
+      "Deliver a concise briefing to Ali",
     ],
   },
   {
-    id: "noticias-ia",
-    emoji: "📰",
-    name: "Noticias IA y Web",
-    description: "Resume las noticias más relevantes de IA y desarrollo web del timeline de Twitter para arrancar el día informado.",
-    schedule: "7:45h (cada día)",
+    id: "agent-watch",
+    emoji: "🧠",
+    name: "Agent Watch",
+    description: "Keep an eye on Alfred, spawned specialists, and background work so nothing quietly stalls.",
+    schedule: "Every 30 minutes",
     trigger: "cron",
     status: "active",
     steps: [
-      "Lee el timeline de Twitter/X via bird CLI",
-      "Filtra noticias de IA, web dev, arquitectura y herramientas dev",
-      "Selecciona 5-7 noticias más relevantes para el nicho de Carlos",
-      "Genera resumen estructurado con enlace y contexto",
-      "Envía digest por Telegram",
+      "Inspect active sessions and long-running work",
+      "Spot stuck or unusually expensive runs",
+      "Check for subagents that need steering or cleanup",
+      "Surface anything that needs human attention",
+      "Send a short operational summary when something matters",
     ],
   },
   {
-    id: "trend-monitor",
-    emoji: "🔥",
-    name: "Trend Monitor",
-    description: "Radar de tendencias urgentes en el nicho tech. Detecta temas virales antes de que exploten para aprovechar la ola de contenido.",
-    schedule: "7h, 10h, 15h y 20h (cada día)",
+    id: "memory-curation",
+    emoji: "📝",
+    name: "Memory Curation",
+    description: "Turn raw daily context into useful long-term memory so Alfred stays sharp instead of noisy.",
+    schedule: "21:30 every day",
     trigger: "cron",
     status: "active",
     steps: [
-      "Monitoriza trending topics en Twitter/X relacionados con tech y programación",
-      "Busca en Hacker News, dev.to y GitHub Trending",
-      "Evalúa si el trend es relevante para el canal de Carlos",
-      "Si detecta algo urgente, notifica inmediatamente con contexto",
-      "Sugiere ángulo de contenido si el trend tiene potencial",
+      "Review recent daily memory files",
+      "Extract lasting decisions, preferences, and lessons",
+      "Update long-term memory with the important bits",
+      "Avoid clutter and duplicated notes",
+      "Leave tomorrow's Alfred with cleaner context",
     ],
   },
   {
-    id: "daily-linkedin",
-    emoji: "📊",
-    name: "Daily LinkedIn Brief",
-    description: "Genera el post de LinkedIn del día basado en las noticias más relevantes de Hacker News, dev.to y la web tech.",
-    schedule: "9h (cada día)",
+    id: "repo-guardian",
+    emoji: "🔧",
+    name: "Repo Guardian",
+    description: "Watch the BatCave codebase and Alfred's tooling so changes stay healthy and recoverable.",
+    schedule: "Every 4 hours",
     trigger: "cron",
     status: "active",
     steps: [
-      "Recopila top posts de Hacker News (front page tech/dev)",
-      "Revisa trending en dev.to y artículos destacados",
-      "Selecciona tema con mayor potencial de engagement para la audiencia de Carlos",
-      "Redacta post de LinkedIn en la voz de Carlos (profesional-cercano, sin emojis ni hashtags)",
-      "Envía borrador por Telegram para revisión y publicación",
+      "Check git status in key workspaces",
+      "Flag risky uncommitted changes or broken builds",
+      "Suggest or create safe checkpoints when appropriate",
+      "Track BatCave-specific work in progress",
+      "Report anything that looks fragile",
     ],
   },
   {
-    id: "newsletter-digest",
-    emoji: "📬",
-    name: "Newsletter Digest",
-    description: "Digest curado de las newsletters del día. Consolida lo mejor de las suscripciones de Carlos en un resumen accionable.",
-    schedule: "20h (cada día)",
-    trigger: "cron",
-    status: "active",
-    steps: [
-      "Accede a Gmail y busca newsletters recibidas en el día",
-      "Filtra por remitentes relevantes (tech, IA, productividad, inversiones)",
-      "Extrae los puntos clave de cada newsletter",
-      "Genera digest estructurado por categorías",
-      "Envía resumen por Telegram",
-    ],
-  },
-  {
-    id: "email-categorization",
-    emoji: "📧",
-    name: "Email Categorization",
-    description: "Categoriza y resume los emails del día para que Carlos empiece la jornada sin inbox anxiety.",
-    schedule: "7:45h (cada día)",
-    trigger: "cron",
-    status: "active",
-    steps: [
-      "Accede a Gmail y lee emails no leídos del día",
-      "Categoriza: urgente / colabs / facturas / universidad / newsletters / otros",
-      "Resumen de cada categoría con acción recomendada",
-      "Detecta emails de clientes con facturas pendientes (>90 días)",
-      "Envía resumen estructurado por Telegram",
-    ],
-  },
-  {
-    id: "weekly-newsletter",
-    emoji: "📅",
-    name: "Weekly Newsletter",
-    description: "Recapitulación semanal automática de los tweets y posts de LinkedIn para usar como base de la newsletter.",
-    schedule: "Domingos 18h",
-    trigger: "cron",
-    status: "active",
-    steps: [
-      `Recopila tweets de la semana (${BRANDING.twitterHandle} via bird CLI)`,
-      "Recopila posts publicados en LinkedIn",
-      "Organiza por temas y relevancia",
-      "Genera borrador de recapitulación semanal en tono newsletter",
-      "Envía por Telegram para revisión antes de publicar",
-    ],
-  },
-  {
-    id: "advisory-board",
-    emoji: "🏛️",
-    name: "Advisory Board",
-    description: "7 asesores IA con personalidades y memorias propias. Consulta a cualquier advisor o convoca al board completo.",
-    schedule: "Bajo demanda",
+    id: "advisors-on-demand",
+    emoji: "🦇",
+    name: "Alfred On Demand",
+    description: "A direct command workflow for when Ali wants Alfred to investigate, build, or coordinate something immediately.",
+    schedule: "On demand",
     trigger: "demand",
     status: "active",
     steps: [
-      "Carlos envía /cfo, /cmo, /cto, /legal, /growth, /coach o /producto",
-      "Tenacitas carga el skill advisory-board/SKILL.md",
-      "Lee el archivo de memoria del advisor correspondiente (memory/advisors/)",
-      "Responde en la voz y personalidad del advisor con contexto de Carlos",
-      "Actualiza el archivo de memoria con lo aprendido en la consulta",
-      "/board convoca los 7 advisors en secuencia y compila un board meeting completo",
-    ],
-  },
-  {
-    id: "git-backup",
-    emoji: "🔄",
-    name: "Git Backup",
-    description: "Auto-commit y push del workspace cada 4 horas para garantizar que nada se pierde.",
-    schedule: "Cada 4h",
-    trigger: "cron",
-    status: "active",
-    steps: [
-      "Comprueba si hay cambios en el workspace de Tenacitas",
-      "Si hay cambios: git add -A",
-      "Genera mensaje de commit automático con timestamp y resumen de cambios",
-      "git push al repositorio remoto",
-      "Silencioso si no hay cambios — solo notifica si hay error",
-    ],
-  },
-  {
-    id: "nightly-evolution",
-    emoji: "🌙",
-    name: "Nightly Evolution",
-    description: "Sesión autónoma nocturna que implementa mejoras en Mission Control según el ROADMAP o inventa features nuevas útiles.",
-    schedule: "3h (cada noche)",
-    trigger: "cron",
-    status: "active",
-    steps: [
-      "Lee ROADMAP.md de Mission Control para seleccionar la siguiente feature",
-      "Si no hay features claras, analiza el estado actual e inventa algo útil",
-      "Implementa la feature completa (código, tests si aplica, UI)",
-      "Verifica que el build de Next.js no falla",
-      "Notifica a Carlos por Telegram con el resumen de lo implementado",
+      "Receive Ali's instruction",
+      "Choose the right tools or specialist sessions",
+      "Do the work or orchestrate it",
+      "Report clearly with decisions and next steps",
+      "Write down anything worth remembering",
     ],
   },
 ];
@@ -194,7 +111,7 @@ function StatusBadge({ status }: { status: "active" | "inactive" }) {
         textTransform: "uppercase",
         letterSpacing: "0.5px",
       }}>
-        {status === "active" ? "Activo" : "Inactivo"}
+        {status === "active" ? "Active" : "Inactive"}
       </span>
     </div>
   );
@@ -216,7 +133,7 @@ function TriggerBadge({ trigger }: { trigger: "cron" | "demand" }) {
       letterSpacing: "0.4px",
       textTransform: "uppercase" as const,
     }}>
-      {trigger === "cron" ? "⏱ Cron" : "⚡ Demanda"}
+      {trigger === "cron" ? "⏱ Scheduled" : "⚡ On demand"}
     </div>
   );
 }
@@ -224,7 +141,6 @@ function TriggerBadge({ trigger }: { trigger: "cron" | "demand" }) {
 export default function WorkflowsPage() {
   return (
     <div style={{ padding: "24px" }}>
-      {/* Header */}
       <div style={{ marginBottom: "32px" }}>
         <h1 style={{
           fontFamily: "var(--font-heading)",
@@ -237,16 +153,15 @@ export default function WorkflowsPage() {
           Workflows
         </h1>
         <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-secondary)" }}>
-          {WORKFLOWS.filter(w => w.status === "active").length} flujos activos · {WORKFLOWS.filter(w => w.trigger === "cron").length} crons automáticos · {WORKFLOWS.filter(w => w.trigger === "demand").length} bajo demanda
+          {WORKFLOWS.filter(w => w.status === "active").length} active workflows · {WORKFLOWS.filter(w => w.trigger === "cron").length} scheduled · {WORKFLOWS.filter(w => w.trigger === "demand").length} on demand
         </p>
       </div>
 
-      {/* Stats row */}
       <div style={{ display: "flex", gap: "12px", marginBottom: "32px", flexWrap: "wrap" }}>
         {[
           { label: "Total workflows", value: WORKFLOWS.length, color: "var(--text-primary)" },
-          { label: "Crons activos", value: WORKFLOWS.filter(w => w.trigger === "cron" && w.status === "active").length, color: "#60a5fa" },
-          { label: "Bajo demanda", value: WORKFLOWS.filter(w => w.trigger === "demand").length, color: "var(--accent)" },
+          { label: "Scheduled", value: WORKFLOWS.filter(w => w.trigger === "cron" && w.status === "active").length, color: "#60a5fa" },
+          { label: "On demand", value: WORKFLOWS.filter(w => w.trigger === "demand").length, color: "var(--accent)" },
         ].map((stat) => (
           <div key={stat.label} style={{
             padding: "16px 20px",
@@ -260,15 +175,14 @@ export default function WorkflowsPage() {
               fontSize: "28px",
               fontWeight: 700,
               color: stat.color,
-              letterSpacing: "-1px",
+              marginBottom: "4px",
             }}>
               {stat.value}
             </div>
             <div style={{
               fontFamily: "var(--font-body)",
-              fontSize: "11px",
-              color: "var(--text-muted)",
-              marginTop: "2px",
+              fontSize: "12px",
+              color: "var(--text-secondary)",
             }}>
               {stat.label}
             </div>
@@ -276,108 +190,67 @@ export default function WorkflowsPage() {
         ))}
       </div>
 
-      {/* Workflow cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ display: "grid", gap: "16px" }}>
         {WORKFLOWS.map((workflow) => (
-          <div key={workflow.id} style={{
-            backgroundColor: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "16px",
-            padding: "20px 24px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-          }}>
-            {/* Card header */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "12px", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
-                  backgroundColor: "var(--surface-elevated)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "20px",
-                  border: "1px solid var(--border-strong)",
-                  flexShrink: 0,
-                }}>
-                  {workflow.emoji}
-                </div>
-                <div>
-                  <h3 style={{
+          <div
+            key={workflow.id}
+            style={{
+              backgroundColor: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "14px",
+              padding: "18px 20px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", marginBottom: "12px", flexWrap: "wrap" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "22px" }}>{workflow.emoji}</span>
+                  <h2 style={{
                     fontFamily: "var(--font-heading)",
-                    fontSize: "16px",
+                    fontSize: "18px",
                     fontWeight: 700,
                     color: "var(--text-primary)",
-                    letterSpacing: "-0.3px",
-                    marginBottom: "2px",
+                    margin: 0,
                   }}>
                     {workflow.name}
-                  </h3>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <TriggerBadge trigger={workflow.trigger} />
-                    <StatusBadge status={workflow.status} />
-                  </div>
+                  </h2>
                 </div>
+                <p style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "13px",
+                  lineHeight: 1.6,
+                  color: "var(--text-secondary)",
+                  margin: 0,
+                  maxWidth: "780px",
+                }}>
+                  {workflow.description}
+                </p>
               </div>
-              {/* Schedule */}
-              <div style={{
-                padding: "6px 12px",
-                backgroundColor: "var(--surface-elevated)",
-                border: "1px solid var(--border)",
-                borderRadius: "8px",
-                fontFamily: "var(--font-body)",
-                fontSize: "11px",
-                color: "var(--text-secondary)",
-                whiteSpace: "nowrap" as const,
-                flexShrink: 0,
-              }}>
-                🕐 {workflow.schedule}
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                <TriggerBadge trigger={workflow.trigger} />
+                <StatusBadge status={workflow.status} />
               </div>
             </div>
 
-            {/* Description */}
-            <p style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "13px",
-              color: "var(--text-secondary)",
-              lineHeight: "1.6",
-              marginBottom: "16px",
-            }}>
-              {workflow.description}
-            </p>
+            <div style={{ marginBottom: "12px", fontFamily: "var(--font-body)", fontSize: "12px", color: "var(--text-muted)" }}>
+              <strong style={{ color: "var(--text-secondary)" }}>Schedule:</strong> {workflow.schedule}
+            </div>
 
-            {/* Steps */}
-            <div style={{
-              backgroundColor: "var(--surface-elevated)",
-              borderRadius: "10px",
-              padding: "12px 16px",
-              border: "1px solid var(--border)",
-            }}>
-              <div style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                fontWeight: 600,
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.7px",
-                marginBottom: "8px",
-              }}>
-                Pasos
-              </div>
-              <ol style={{ margin: 0, padding: "0 0 0 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                {workflow.steps.map((step, i) => (
-                  <li key={i} style={{
+            <ol style={{ margin: 0, paddingLeft: "18px", display: "grid", gap: "8px" }}>
+              {workflow.steps.map((step, idx) => (
+                <li
+                  key={idx}
+                  style={{
                     fontFamily: "var(--font-body)",
-                    fontSize: "12px",
+                    fontSize: "13px",
                     color: "var(--text-secondary)",
-                    lineHeight: "1.5",
-                  }}>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {step}
+                </li>
+              ))}
+            </ol>
           </div>
         ))}
       </div>

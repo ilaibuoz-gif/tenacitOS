@@ -67,7 +67,7 @@ export default function MovingAvatar({
   const [targetPos, setTargetPos] = useState(initialPos);
   const currentPos = useRef(initialPos.clone());
   
-  // Notificar posición inicial
+  // Notifyr posición inicial
   useEffect(() => {
     onPositionUpdate(agent.id, initialPos.clone());
   }, []);
@@ -160,7 +160,7 @@ export default function MovingAvatar({
       currentPos.current.copy(newPos);
       groupRef.current.position.copy(currentPos.current);
 
-      // Notificar la nueva posición
+      // Notifyr la nueva posición
       onPositionUpdate(agent.id, currentPos.current.clone());
 
       // Rotar hacia la dirección del movimiento

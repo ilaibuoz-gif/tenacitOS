@@ -103,12 +103,12 @@ async function runAction(action: string): Promise<ActionResult> {
           results.push('⚠️ PM2: could not connect');
         }
 
-        // Ping the main site
+        // Ping local OpenClaw health
         try {
-          const { stdout: ping } = await execAsync('curl -s -o /dev/null -w "%{http_code}" --max-time 5 https://tenacitas.cazaustre.dev');
-          results.push(`\n🌐 tenacitas.cazaustre.dev: HTTP ${ping.trim()}`);
+          const { stdout: ping } = await execAsync('curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:18789/health');
+          results.push(`\n🌐 Local OpenClaw health: HTTP ${ping.trim()}`);
         } catch {
-          results.push('\n🌐 tenacitas.cazaustre.dev: unreachable');
+          results.push('\n🌐 Local OpenClaw health: unreachable');
         }
 
         output = results.join('\n');

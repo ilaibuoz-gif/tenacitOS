@@ -17,14 +17,18 @@ interface Skill {
   id: string;
   name: string;
   description: string;
-  location: string;
-  source: "workspace" | "system";
-  homepage?: string;
+  source: string;
+  category?: string;
+  homepage?: string | null;
   emoji?: string;
-  fileCount: number;
-  fullContent: string;
-  files: string[];
-  agents: string[];
+  bundled?: boolean;
+  missing?: string[] | null;
+  status?: string;
+  location?: string;
+  fileCount?: number;
+  fullContent?: string;
+  files?: string[];
+  agents?: string[];
 }
 
 interface SkillsData {
@@ -34,7 +38,7 @@ interface SkillsData {
 export default function SkillsPage() {
   const [data, setData] = useState<SkillsData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterSource, setFilterSource] = useState<"all" | "workspace" | "system">("all");
+  const [filterSource, setFilterSource] = useState<"all" | "personal" | "bundled">("all");
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
   useEffect(() => {
@@ -74,11 +78,11 @@ export default function SkillsPage() {
   }
 
   // Group by source
-  const workspaceSkills = filteredSkills.filter((s) => s.source === "workspace");
-  const systemSkills = filteredSkills.filter((s) => s.source === "system");
+  const personalSkills = filteredSkills.filter((s) => s.source === "agents-skills-personal" || s.source === "workspace" || s.source === "user");
+  const bundledSkills = filteredSkills.filter((s) => s.source === "openclaw-bundled" || s.source === "system" || s.source === "managed");
 
-  const workspaceCount = skills.filter((s) => s.source === "workspace").length;
-  const systemCount = skills.filter((s) => s.source === "system").length;
+  const personalCount = skills.filter((s) => s.source === "agents-skills-personal" || s.source === "workspace" || s.source === "user").length;
+  const bundledCount = skills.filter((s) => s.source === "openclaw-bundled" || s.source === "system" || s.source === "managed").length;
 
   return (
     <div style={{ padding: "24px" }}>
@@ -96,15 +100,6 @@ export default function SkillsPage() {
         >
           Skills Manager
         </h1>
-        <p
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "13px",
-            color: "var(--text-secondary)",
-          }}
-        >
-          Skills disponibles en el sistema OpenClaw
-        </p>
       </div>
 
       {/* Stats */}
@@ -119,14 +114,14 @@ export default function SkillsPage() {
         <MetricCard icon={Puzzle} value={skills.length} label="Total Skills" />
         <MetricCard
           icon={FolderOpen}
-          value={workspaceCount}
-          label="Workspace Skills"
+          value={personalCount}
+          label="Personal Skills"
           changeColor="positive"
         />
         <MetricCard
           icon={Package}
-          value={systemCount}
-          label="System Skills"
+          value={bundledCount}
+          label="Bundled Skills"
           changeColor="secondary"
         />
       </div>
@@ -155,7 +150,7 @@ export default function SkillsPage() {
           />
           <input
             type="text"
-            placeholder="Buscar skills..."
+            placeholder="Search skills..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -191,15 +186,15 @@ export default function SkillsPage() {
               transition: "all 150ms ease",
             }}
           >
-            Todas ({skills.length})
+            All ({skills.length})
           </button>
           <button
-            onClick={() => setFilterSource("workspace")}
+            onClick={() => setFilterSource("personal")}
             style={{
               padding: "12px 20px",
               borderRadius: "6px",
-              backgroundColor: filterSource === "workspace" ? "var(--accent-soft)" : "var(--surface)",
-              color: filterSource === "workspace" ? "var(--accent)" : "var(--text-secondary)",
+              backgroundColor: filterSource === "personal" ? "var(--accent-soft)" : "var(--surface)",
+              color: filterSource === "personal" ? "var(--accent)" : "var(--text-secondary)",
               border: "1px solid var(--border)",
               fontFamily: "var(--font-body)",
               fontSize: "12px",
@@ -208,15 +203,15 @@ export default function SkillsPage() {
               transition: "all 150ms ease",
             }}
           >
-            Workspace ({workspaceCount})
+            Personal ({personalCount})
           </button>
           <button
-            onClick={() => setFilterSource("system")}
+            onClick={() => setFilterSource("bundled")}
             style={{
               padding: "12px 20px",
               borderRadius: "6px",
-              backgroundColor: filterSource === "system" ? "var(--accent-soft)" : "var(--surface)",
-              color: filterSource === "system" ? "var(--accent)" : "var(--text-secondary)",
+              backgroundColor: filterSource === "bundled" ? "var(--accent-soft)" : "var(--surface)",
+              color: filterSource === "bundled" ? "var(--accent)" : "var(--text-secondary)",
               border: "1px solid var(--border)",
               fontFamily: "var(--font-body)",
               fontSize: "12px",
@@ -225,7 +220,7 @@ export default function SkillsPage() {
               transition: "all 150ms ease",
             }}
           >
-            System ({systemCount})
+            Bundled ({bundledCount})
           </button>
         </div>
       </div>
@@ -248,14 +243,14 @@ export default function SkillsPage() {
               margin: "0 auto 16px",
             }}
           />
-          <p style={{ color: "var(--text-secondary)" }}>No se encontraron skills</p>
+          <p style={{ color: "var(--text-secondary)" }}>No skills found</p>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-          {/* Workspace Skills */}
-          {workspaceSkills.length > 0 && (filterSource === "all" || filterSource === "workspace") && (
+          {/* Personal Skills */}
+          {personalSkills.length > 0 && (filterSource === "all" || filterSource === "personal") && (
             <div>
-              <SectionHeader label="WORKSPACE SKILLS" />
+              <SectionHeader label="PERSONAL SKILLS" />
               <div
                 style={{
                   display: "grid",
@@ -264,17 +259,17 @@ export default function SkillsPage() {
                   marginTop: "16px",
                 }}
               >
-                {workspaceSkills.map((skill) => (
+                {personalSkills.map((skill) => (
                   <SkillCard key={skill.id} skill={skill} onClick={() => setSelectedSkill(skill)} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* System Skills */}
-          {systemSkills.length > 0 && (filterSource === "all" || filterSource === "system") && (
+          {/* Bundled Skills */}
+          {bundledSkills.length > 0 && (filterSource === "all" || filterSource === "bundled") && (
             <div>
-              <SectionHeader label="SYSTEM SKILLS" />
+              <SectionHeader label="BUNDLED SKILLS" />
               <div
                 style={{
                   display: "grid",
@@ -283,7 +278,7 @@ export default function SkillsPage() {
                   marginTop: "16px",
                 }}
               >
-                {systemSkills.map((skill) => (
+                {bundledSkills.map((skill) => (
                   <SkillCard key={skill.id} skill={skill} onClick={() => setSelectedSkill(skill)} />
                 ))}
               </div>
@@ -356,7 +351,7 @@ function SkillCard({ skill, onClick }: { skill: Skill; onClick: () => void }) {
               overflow: "hidden",
             }}
           >
-            {skill.description}
+            {skill.description || 'No description available.'}
           </p>
         </div>
       </div>
@@ -498,11 +493,11 @@ function SkillDetailModal({ skill, onClose }: { skill: Skill; onClose: () => voi
                   marginBottom: "12px",
                 }}
               >
-                {skill.description}
+                {skill.description || 'No description available.'}
               </p>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <div className="badge-positive">{skill.source}</div>
-                <div className="badge-info">{skill.fileCount} archivos</div>
+                <div className="badge-positive">{skill.source || 'workspace'}</div>
+                <div className="badge-info">{skill.bundled ? 'bundled' : 'installed'}</div>
                 {skill.agents && skill.agents.length > 0 && skill.agents.map((agent) => (
                   <div
                     key={agent}
@@ -554,7 +549,7 @@ function SkillDetailModal({ skill, onClose }: { skill: Skill; onClose: () => voi
               marginBottom: "12px",
             }}
           >
-            Archivos ({skill.files.length})
+            Files ({skill.files?.length || 0})
           </h3>
           <div
             style={{
@@ -565,7 +560,7 @@ function SkillDetailModal({ skill, onClose }: { skill: Skill; onClose: () => voi
               overflow: "auto",
             }}
           >
-            {skill.files.map((file) => (
+            {(skill.files || []).map((file) => (
               <div
                 key={file}
                 style={{

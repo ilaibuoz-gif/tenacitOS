@@ -26,80 +26,60 @@ function parseIdentityMd(): { name: string; creature: string; emoji: string } {
   }
 }
 
-function getIntegrationStatus() {
-  const integrations = [];
-
-  // Telegram — read from openclaw.json (channels.telegram)
-  let telegramEnabled = false;
-  let telegramAccounts = 0;
+function getOpenClawSnapshot() {
+  const openclawConfigPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
+  let config: any = {};
   try {
-    const openclawConfigPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
-    const openclawConfig = JSON.parse(fs.readFileSync(openclawConfigPath, 'utf-8'));
-    const telegramConfig = openclawConfig?.channels?.telegram;
-    telegramEnabled = !!(telegramConfig?.enabled);
-    if (telegramConfig?.accounts) {
-      telegramAccounts = Object.keys(telegramConfig.accounts).length;
-    }
+    config = JSON.parse(fs.readFileSync(openclawConfigPath, 'utf-8'));
   } catch {}
-  integrations.push({
-    id: 'telegram',
-    name: 'Telegram',
-    status: telegramEnabled ? 'connected' : 'disconnected',
-    icon: 'MessageCircle',
-    lastActivity: telegramEnabled ? new Date().toISOString() : null,
-    detail: telegramEnabled ? `${telegramAccounts} bots configured` : null,
-  });
 
-  // Twitter (bird CLI) - check TOOLS.md for configuration
-  let twitterConfigured = false;
+  let sessionsCount = 0;
+  let activeSessions = 0;
   try {
-    const toolsPath = path.join(WORKSPACE_PATH, 'TOOLS.md');
-    const toolsContent = fs.readFileSync(toolsPath, 'utf-8');
-    twitterConfigured = toolsContent.includes('bird') && toolsContent.includes('auth_token');
+    const sessionsPath = path.join(os.homedir(), '.openclaw', 'agents', 'main', 'sessions', 'sessions.json');
+    const sessionsStore = JSON.parse(fs.readFileSync(sessionsPath, 'utf-8'));
+    const values = Object.values(sessionsStore || {}) as any[];
+    sessionsCount = values.length;
+    activeSessions = values.filter((s) => s && (Date.now() - (s.updatedAt || 0) < 15 * 60 * 1000)).length;
   } catch {}
-  integrations.push({
-    id: 'twitter',
-    name: 'Twitter (bird CLI)',
-    status: twitterConfigured ? 'configured' : 'not_configured',
-    icon: 'Twitter',
-    lastActivity: null,
-    detail: null,
-  });
 
-  // Google (gog/google-gemini-cli-auth) — check openclaw.json plugins
-  let googleConfigured = false;
-  let googleDetail: string | null = null;
-  try {
-    const openclawConfigPath = path.join(os.homedir(), '.openclaw', 'openclaw.json');
-    const openclawConfig = JSON.parse(fs.readFileSync(openclawConfigPath, 'utf-8'));
-    const gogPlugin = openclawConfig?.plugins?.entries?.['google-gemini-cli-auth'];
-    googleConfigured = !!(gogPlugin?.enabled);
-    if (googleConfigured) googleDetail = 'google-gemini-cli-auth plugin enabled';
-  } catch {}
-  // Fallback: check for gog config directory
-  if (!googleConfigured) {
-    try {
-      const gogPath = path.join(os.homedir(), '.config', 'gog');
-      googleConfigured = fs.existsSync(gogPath);
-    } catch {}
-  }
-  integrations.push({
-    id: 'google',
-    name: 'Google (GOG)',
-    status: googleConfigured ? 'configured' : 'not_configured',
-    icon: 'Mail',
-    lastActivity: null,
-    detail: googleDetail,
-  });
+  const telegramEnabled = !!config?.channels?.telegram?.enabled;
+  const gatewayPort = config?.gateway?.port || 18789;
+  const gatewayMode = config?.gateway?.mode || 'local';
+  const authMode = config?.gateway?.auth?.mode || 'token';
+  const model = config?.agents?.defaults?.model?.primary || 'openai-codex/gpt-5.4';
 
-  return integrations;
+  return {
+    integrations: [
+      {
+        id: 'telegram',
+        name: 'Telegram',
+        status: telegramEnabled ? 'connected' : 'disconnected',
+        icon: 'MessageCircle',
+        lastActivity: telegramEnabled ? new Date().toISOString() : null,
+        detail: telegramEnabled ? 'Enabled in OpenClaw' : 'Disabled',
+      },
+    ],
+    gateway: {
+      mode: gatewayMode,
+      port: gatewayPort,
+      authMode,
+    },
+    agent: {
+      mainAgentName: process.env.NEXT_PUBLIC_AGENT_NAME || 'Alfred',
+      sessionsCount,
+      activeSessions,
+      model,
+    },
+  };
 }
 
 export async function GET() {
   const identity = parseIdentityMd();
   const uptime = process.uptime();
   const nodeVersion = process.version;
-  const model = process.env.OPENCLAW_MODEL || process.env.DEFAULT_MODEL || 'anthropic/claude-sonnet-4';
+  const snapshot = getOpenClawSnapshot();
+  const model = snapshot.agent.model;
   
   const systemInfo = {
     agent: {
@@ -114,14 +94,20 @@ export async function GET() {
       model,
       workspacePath: WORKSPACE_PATH,
       platform: os.platform(),
-      hostname: os.hostname(),
+      hostname: "Ali's Mac mini",
       memory: {
         total: os.totalmem(),
         free: os.freemem(),
         used: os.totalmem() - os.freemem(),
       },
     },
-    integrations: getIntegrationStatus(),
+    integrations: snapshot.integrations,
+    gateway: snapshot.gateway,
+    batcave: {
+      mainAgentName: snapshot.agent.mainAgentName,
+      sessionsCount: snapshot.agent.sessionsCount,
+      activeSessions: snapshot.agent.activeSessions,
+    },
     timestamp: new Date().toISOString(),
   };
   

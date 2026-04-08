@@ -55,7 +55,7 @@ export default function FilesPage() {
           File Browser
         </h1>
         <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-secondary)" }}>
-          Navega por los workspaces y archivos de los agentes
+          Navega por los workspaces y files de los agentes
         </p>
       </div>
 
@@ -239,7 +239,7 @@ export default function FilesPage() {
                 fontSize: "14px",
               }}
             >
-              Selecciona un workspace para explorar sus archivos
+              Select un workspace para explorar sus files
             </div>
           )}
         </main>

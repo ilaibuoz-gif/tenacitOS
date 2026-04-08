@@ -74,11 +74,8 @@ export default function DashboardPage() {
             letterSpacing: '-1.5px'
           }}
         >
-          🦞 Mission Control
+          🦇 The BatCave
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-          Overview of Tenacitas agent activity
-        </p>
       </div>
 
       {/* Stats Grid + Weather */}

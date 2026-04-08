@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { execSync } from "child_process";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +31,9 @@ interface Agent {
 // Override via each agent's openclaw.json → ui.emoji / ui.color / name fields.
 const DEFAULT_AGENT_CONFIG: Record<string, { emoji: string; color: string; name?: string }> = {
   main: {
-    emoji: process.env.NEXT_PUBLIC_AGENT_EMOJI || "🤖",
-    color: "#ff6b35",
-    name: process.env.NEXT_PUBLIC_AGENT_NAME || "Mission Control",
+    emoji: process.env.NEXT_PUBLIC_AGENT_EMOJI || "🦇",
+    color: "#f59e0b",
+    name: process.env.NEXT_PUBLIC_AGENT_NAME || "Alfred",
   },
 };
 
@@ -61,8 +62,40 @@ export async function GET() {
     const configPath = (process.env.OPENCLAW_DIR || "/root/.openclaw") + "/openclaw.json";
     const config = JSON.parse(readFileSync(configPath, "utf-8"));
 
+    const configuredAgents = Array.isArray(config.agents?.list) ? config.agents.list : [];
+
+    // Ensure the main Alfred agent exists even when the config has no explicit agents.list entry
+    const mainExists = configuredAgents.some((agent: any) => agent.id === 'main');
+    const normalizedAgents = mainExists
+      ? configuredAgents
+      : [
+          {
+            id: 'main',
+            name: process.env.NEXT_PUBLIC_AGENT_NAME || 'Alfred',
+            workspace: join(process.env.OPENCLAW_DIR || '/Users/alialzoubi/.openclaw', 'workspace'),
+            model: config.agents?.defaults?.model,
+            subagents: { allowAgents: [] },
+            ui: {
+              emoji: process.env.NEXT_PUBLIC_AGENT_EMOJI || '🦇',
+              color: '#f59e0b',
+            },
+          },
+          ...configuredAgents,
+        ];
+
+    let sessions: any[] = [];
+    try {
+      const rawSessions = execSync('openclaw sessions --json', {
+        encoding: 'utf-8',
+        timeout: 8000,
+      });
+      sessions = JSON.parse(rawSessions).sessions || [];
+    } catch {
+      sessions = [];
+    }
+
     // Get agents from config
-    const agents: Agent[] = config.agents.list.map((agent: any) => {
+    const agents: Agent[] = normalizedAgents.map((agent: any) => {
       const agentInfo = getAgentDisplayInfo(agent.id, agent);
 
       // Get telegram account info
@@ -70,23 +103,29 @@ export async function GET() {
         config.channels?.telegram?.accounts?.[agent.id];
       const botToken = telegramAccount?.botToken;
 
-      // Check if agent has recent activity
-      const memoryPath = join(agent.workspace, "memory");
+      // Check real session activity for this agent
+      const agentSessions = sessions.filter((session: any) => {
+        const key = session.key || '';
+        return key.startsWith(`agent:${agent.id}:`);
+      });
+
+      const mostRecentSession = agentSessions
+        .slice()
+        .sort((a: any, b: any) => (b.updatedAt || b.startedAt || 0) - (a.updatedAt || a.startedAt || 0))[0];
+
       let lastActivity = undefined;
       let status: "online" | "offline" = "offline";
 
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        const memoryFile = join(memoryPath, `${today}.md`);
-        const stat = require("fs").statSync(memoryFile);
-        lastActivity = stat.mtime.toISOString();
-        // Consider online if activity within last 5 minutes
-        status =
-          Date.now() - stat.mtime.getTime() < 5 * 60 * 1000
-            ? "online"
-            : "offline";
-      } catch (e) {
-        // No recent activity
+      if (mostRecentSession) {
+        const ts = mostRecentSession.updatedAt || mostRecentSession.startedAt;
+        if (ts) {
+          lastActivity = new Date(ts).toISOString();
+          status = Date.now() - ts < 15 * 60 * 1000 ? "online" : "offline";
+        }
+      }
+
+      if (agent.id === 'main' && agentSessions.length > 0) {
+        status = 'online';
       }
 
       // Get details of allowed subagents
@@ -132,7 +171,7 @@ export async function GET() {
         botToken: botToken ? "configured" : undefined,
         status,
         lastActivity,
-        activeSessions: 0, // TODO: get from sessions API
+        activeSessions: agentSessions.length,
       };
     });
 

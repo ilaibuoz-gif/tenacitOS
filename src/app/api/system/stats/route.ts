@@ -5,19 +5,36 @@ import os from "os";
 
 const execAsync = promisify(exec);
 
-const SYSTEMD_SERVICES = ["mission-control", "content-vault", "classvault", "creatoros"];
+const BATCAVE_SERVICES = ["openclaw-gateway"];
 
 export async function GET() {
   try {
-    // CPU (load average as percentage)
+    // CPU (prefer real macOS top reading)
     const loadAvg = os.loadavg()[0];
     const cpuCount = os.cpus().length;
-    const cpu = Math.min(Math.round((loadAvg / cpuCount) * 100), 100);
+    let cpu = Math.min(Math.round((loadAvg / cpuCount) * 100), 100);
+    try {
+      const { stdout } = await execAsync("top -l 1 -n 0 | grep 'CPU usage'");
+      const match = stdout.match(/(\d+(?:\.\d+)?)% user,\s*(\d+(?:\.\d+)?)% sys/);
+      if (match) cpu = Math.round(parseFloat(match[1]) + parseFloat(match[2]));
+    } catch {}
 
-    // RAM
+    // RAM (prefer vm_stat on macOS over os.freemem())
     const totalMem = os.totalmem();
-    const freeMem = os.freemem();
-    const usedMem = totalMem - freeMem;
+    let usedMem = totalMem - os.freemem();
+    try {
+      const { stdout } = await execAsync("vm_stat");
+      const pageSizeMatch = stdout.match(/page size of (\d+) bytes/);
+      const pageSize = pageSizeMatch ? parseInt(pageSizeMatch[1], 10) : 16384;
+      const getPages = (name: string) => {
+        const regex = new RegExp(`${name}:\\s+(\\d+)\\.`);
+        const match = stdout.match(regex);
+        return match ? parseInt(match[1], 10) : 0;
+      };
+      const freePages = getPages('Pages free') + getPages('Pages speculative');
+      const freeMem = freePages * pageSize;
+      usedMem = Math.max(0, totalMem - freeMem);
+    } catch {}
     const ram = {
       used: parseFloat((usedMem / 1024 / 1024 / 1024).toFixed(2)),
       total: parseFloat((totalMem / 1024 / 1024 / 1024).toFixed(2)),
@@ -35,16 +52,14 @@ export async function GET() {
       console.error("Failed to get disk stats:", error);
     }
 
-    // Systemd Services (count active ones)
+    // BatCave services (macOS launchd / process-based checks)
     let activeServices = 0;
-    let totalServices = SYSTEMD_SERVICES.length;
+    let totalServices = BATCAVE_SERVICES.length;
     try {
-      for (const name of SYSTEMD_SERVICES) {
-        const { stdout } = await execAsync(`systemctl is-active ${name} 2>/dev/null || true`);
-        if (stdout.trim() === "active") activeServices++;
-      }
+      const { stdout } = await execAsync("launchctl list | egrep 'openclaw|mission-control' || true");
+      if (/openclaw/i.test(stdout)) activeServices += 1;
     } catch (error) {
-      console.error("Failed to get systemd stats:", error);
+      console.error("Failed to get BatCave service stats:", error);
     }
 
     // Tailscale VPN Status
@@ -53,16 +68,16 @@ export async function GET() {
       const { stdout } = await execAsync("tailscale status 2>/dev/null || true");
       vpnActive = stdout.trim().length > 0 && !stdout.includes("Tailscale is stopped");
     } catch {
-      vpnActive = true; // We know it's active
+      vpnActive = false;
     }
 
-    // Firewall Status
-    let firewallActive = true;
+    // Firewall Status (macOS pf fallback, then Linux ufw)
+    let firewallActive = false;
     try {
-      const { stdout } = await execAsync("ufw status 2>/dev/null | head -1 || true");
-      firewallActive = stdout.includes("active");
+      const { stdout } = await execAsync("pfctl -s info 2>/dev/null || ufw status 2>/dev/null | head -1 || true");
+      firewallActive = /status:\s*enabled/i.test(stdout) || stdout.toLowerCase().includes("status: active");
     } catch {
-      firewallActive = true;
+      firewallActive = false;
     }
 
     // Uptime
